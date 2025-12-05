@@ -62,7 +62,17 @@ export const DDDChallenge: React.FC<DDDChallengeProps> = ({ onComplete, onBack }
   const [wrongTries, setWrongTries] = useState(0);
   const { completeMission } = useGamification();
 
-  const unplacedItems = ITEMS.filter(item => !placements[item.id]);
+  // Shuffle items on mount
+  const [shuffledItems] = useState(() => {
+    const array = [...ITEMS];
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  });
+
+  const unplacedItems = shuffledItems.filter(item => !placements[item.id]);
   
   const handleDragStart = (itemId: string) => {
     setDraggedItem(itemId);
