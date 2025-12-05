@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { SimulatedERP, type Order, type Quote } from '../../lib/simulation/backend/SimulatedERP';
 import { SimulatedProvisioning } from '../../lib/simulation/backend/SimulatedProvisioning';
 import { useGamification } from '../../lib/gamification/GamificationStore';
+import { Modal } from '../common/Modal';
 
 type View = 'JOB_LIST' | 'JOB_DETAIL' | 'COMMISSIONING' | 'DIAGNOSTICS';
 
@@ -11,6 +12,17 @@ export const InstallerApp: React.FC = () => {
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const { completeMission } = useGamification();
+  const [modal, setModal] = useState<{ 
+    isOpen: boolean; 
+    title: string; 
+    message: string; 
+    type: 'info' | 'success' | 'warning' | 'error';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info'
+  });
   
   // Diagnostics
   const [searchId, setSearchId] = useState('');
@@ -54,7 +66,12 @@ export const InstallerApp: React.FC = () => {
   const handleComplete = () => {
     if (selectedOrderId && serialNumber && cpId) {
       SimulatedProvisioning.getInstance().commissionCharger(selectedOrderId, serialNumber, cpId);
-      alert("Commissioning Successful! Charger is now online.");
+      setModal({
+        isOpen: true,
+        title: 'Success',
+        message: "Commissioning Successful! Charger is now online.",
+        type: 'success'
+      });
       setView('JOB_LIST');
       setSelectedOrderId(null);
       setChecklist({
@@ -85,23 +102,43 @@ export const InstallerApp: React.FC = () => {
     setDiagnosticResult('REBOOTING...');
     setTimeout(() => {
         setDiagnosticResult('ONLINE');
-        alert('System Rebooted Successfully. Unit is back online.');
+        setModal({
+            isOpen: true,
+            title: 'Success',
+            message: 'System Rebooted Successfully. Unit is back online.',
+            type: 'success'
+        });
     }, 2000);
   };
 
   const handleEmergencyStop = () => {
     completeMission('emergency_stop');
     setDiagnosticResult('SAFE');
-    alert('EMERGENCY STOP EXECUTED. HAZARD CONTAINED.');
+    setModal({
+        isOpen: true,
+        title: 'Critical Alert',
+        message: 'EMERGENCY STOP EXECUTED. HAZARD CONTAINED.',
+        type: 'warning'
+    });
   };
 
   const handleUnlock = () => {
       if (terminalInput === 'ROOT') {
           completeMission('unlock_protocol');
           setDiagnosticResult('ONLINE');
-          alert('ACCESS GRANTED. PROTOCOL OMEGA DISABLED.');
+          setModal({
+              isOpen: true,
+              title: 'Access Granted',
+              message: 'ACCESS GRANTED. PROTOCOL OMEGA DISABLED.',
+              type: 'success'
+          });
       } else {
-          alert('ACCESS DENIED. INCORRECT PASSWORD.');
+          setModal({
+              isOpen: true,
+              title: 'Access Denied',
+              message: 'ACCESS DENIED. INCORRECT PASSWORD.',
+              type: 'error'
+          });
       }
   };
 
@@ -414,6 +451,15 @@ export const InstallerApp: React.FC = () => {
       {view === 'JOB_DETAIL' && renderJobDetail()}
       {view === 'COMMISSIONING' && renderCommissioning()}
       {view === 'DIAGNOSTICS' && renderDiagnostics()}
+
+      <Modal
+        isOpen={modal.isOpen}
+        title={modal.title}
+        onClose={() => setModal(prev => ({ ...prev, isOpen: false }))}
+        type={modal.type}
+      >
+        {modal.message}
+      </Modal>
     </div>
   );
 };

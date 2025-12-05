@@ -1,20 +1,45 @@
 import React, { useState } from 'react';
 import { useGamification } from '../../lib/gamification/GamificationStore';
+import { Modal } from '../common/Modal';
 
 export const MissionControl: React.FC = () => {
   const { missions, isComplete, completionCode, resetSession } = useGamification();
   const [minimized, setMinimized] = useState(false);
+  const [hasMinimized, setHasMinimized] = useState(false);
+  const [hasMaximized, setHasMaximized] = useState(false);
+  const [modal, setModal] = useState<{ 
+    isOpen: boolean; 
+    title: string; 
+    message: string; 
+    type: 'info' | 'success' | 'warning' | 'error';
+    onConfirm?: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info'
+  });
 
   if (minimized) {
     return (
-      <button 
-        onClick={() => setMinimized(false)}
-        className="fixed bottom-4 right-4 bg-blue-600 hover:bg-blue-500 text-white p-3 rounded-full shadow-lg z-50 animate-pulse"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-        </svg>
-      </button>
+      <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2">
+        {hasMinimized && !hasMaximized && (
+            <div className="bg-blue-600 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg animate-bounce mr-2">
+                Click to expand ↗
+            </div>
+        )}
+        <button 
+            onClick={() => {
+                setMinimized(false);
+                setHasMaximized(true);
+            }}
+            className="bg-blue-600 hover:bg-blue-500 text-white p-3 rounded-full shadow-lg animate-pulse"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+        </button>
+      </div>
     );
   }
 
@@ -26,11 +51,24 @@ export const MissionControl: React.FC = () => {
           <div className={`w-2 h-2 rounded-full ${isComplete ? 'bg-green-500' : 'bg-yellow-500 animate-pulse'}`}></div>
           <h3 className="font-bold text-white uppercase tracking-wider text-sm">Mission Control</h3>
         </div>
-        <button onClick={() => setMinimized(true)} className="text-gray-400 hover:text-white">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M5 10a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1z" clipRule="evenodd" />
-          </svg>
-        </button>
+        <div className="flex items-center gap-2">
+            {!hasMinimized && (
+                <div className="text-[10px] text-blue-300 animate-pulse">
+                    You can minimize this &rarr;
+                </div>
+            )}
+            <button 
+                onClick={() => {
+                    setMinimized(true);
+                    setHasMinimized(true);
+                }} 
+                className="text-gray-400 hover:text-white"
+            >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M5 10a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1z" clipRule="evenodd" />
+            </svg>
+            </button>
+        </div>
       </div>
 
       {/* Content */}
@@ -134,9 +172,19 @@ export const MissionControl: React.FC = () => {
                     .join('\n');
                 if (allKeys) {
                     navigator.clipboard.writeText(allKeys);
-                    alert('All keys copied to clipboard!');
+                    setModal({
+                        isOpen: true,
+                        title: 'Success',
+                        message: 'All keys copied to clipboard!',
+                        type: 'success'
+                    });
                 } else {
-                    alert('No keys to copy yet!');
+                    setModal({
+                        isOpen: true,
+                        title: 'Info',
+                        message: 'No keys to copy yet!',
+                        type: 'info'
+                    });
                 }
             }}
             className="text-xs bg-blue-900 hover:bg-blue-800 text-blue-100 px-3 py-1.5 rounded transition-colors flex items-center gap-1"
@@ -148,9 +196,16 @@ export const MissionControl: React.FC = () => {
         </button>
         <button
             onClick={() => {
-                if (confirm('Are you sure you want to reset your session? All progress will be lost.')) {
-                    resetSession();
-                }
+                setModal({
+                    isOpen: true,
+                    title: 'Confirm Reset',
+                    message: 'Are you sure you want to reset your session? All progress will be lost.',
+                    type: 'warning',
+                    onConfirm: () => {
+                        resetSession();
+                        setModal(prev => ({ ...prev, isOpen: false }));
+                    }
+                });
             }}
             className="text-xs bg-red-900 hover:bg-red-800 text-red-100 px-3 py-1.5 rounded transition-colors flex items-center gap-1"
         >
@@ -160,6 +215,18 @@ export const MissionControl: React.FC = () => {
             Reset
         </button>
       </div>
+
+      <Modal
+        isOpen={modal.isOpen}
+        title={modal.title}
+        onClose={() => setModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={modal.onConfirm}
+        type={modal.type}
+        confirmText={modal.onConfirm ? 'Yes, Reset' : undefined}
+        cancelText={modal.onConfirm ? 'Cancel' : undefined}
+      >
+        {modal.message}
+      </Modal>
     </div>
   );
 };

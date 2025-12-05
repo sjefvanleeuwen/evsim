@@ -46,24 +46,67 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart }) => {
           <h2 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
             <span>📋</span> Mission Briefing
           </h2>
-          <ul className="space-y-2 text-gray-300 text-sm">
-            <li className="flex items-start gap-2">
-              <span className="text-green-400">▸</span>
-              <span>Use the <strong>navigation bar</strong> to access different systems</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-green-400">▸</span>
-              <span>The <strong>Mission Control</strong> panel (bottom-right) tracks your objectives</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-green-400">▸</span>
-              <span>Click on things. Poke around. <span className="text-gray-500">What's the worst that could happen?</span></span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-green-400">▸</span>
-              <span>Each completed mission reveals a <strong>unique key</strong> — collect them all!</span>
-            </li>
-          </ul>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-300">
+            <div className="p-2 bg-gray-900/50 rounded border border-gray-800">
+                <strong className="text-green-400 block">1. System Failure Detected</strong>
+                Reboot a critical charger in Amsterdam.
+            </div>
+            <div className="p-2 bg-gray-900/50 rounded border border-gray-800">
+                <strong className="text-green-400 block">2. Capacity Alert</strong>
+                Approve infrastructure expansion for a busy site.
+            </div>
+            <div className="p-2 bg-gray-900/50 rounded border border-gray-800">
+                <strong className="text-green-400 block">3. Revenue Audit</strong>
+                Verify a high-value VIP session.
+            </div>
+            <div className="p-2 bg-gray-900/50 rounded border border-gray-800">
+                <strong className="text-green-400 block">4. Forensic Analysis</strong>
+                Flag a suspicious zero-cost session.
+            </div>
+            <div className="p-2 bg-gray-900/50 rounded border border-gray-800">
+                <strong className="text-green-400 block">5. Protocol Omega</strong>
+                Hack into a locked charger terminal.
+            </div>
+            <div className="p-2 bg-gray-900/50 rounded border border-gray-800">
+                <strong className="text-green-400 block">6. Safety Override</strong>
+                Perform an emergency stop on a dangerous unit.
+            </div>
+            <div className="p-2 bg-gray-900/50 rounded border border-gray-800">
+                <strong className="text-green-400 block">7. Sales Pipeline</strong>
+                Configure a quote for a major B2B client.
+            </div>
+            <div className="p-2 bg-gray-900/50 rounded border border-gray-800">
+                <strong className="text-green-400 block">8. Remote Operator</strong>
+                Force start a session from the Network Map.
+            </div>
+            <div className="p-2 bg-gray-900/50 rounded border border-gray-800">
+                <strong className="text-green-400 block">9. Quality Assurance</strong>
+                Simulate a test charge with a Type 2 connector.
+            </div>
+            <div className="p-2 bg-gray-900/50 rounded border border-gray-800">
+                <strong className="text-green-400 block">10. Domain Architect</strong>
+                Map the ecosystem to DDD bounded contexts.
+            </div>
+            <div className="p-2 bg-gray-900/50 rounded border border-gray-800">
+                <strong className="text-green-400 block">11. Grid Protection</strong>
+                Prevent a blackout using HEMS load balancing.
+            </div>
+            <div className="p-2 bg-gray-900/50 rounded border border-gray-800">
+                <strong className="text-green-400 block">12. Peak Shaver</strong>
+                Save the grid with V2G discharge during a DSO alert.
+            </div>
+          </div>
+
+          <div className="mt-6 p-4 bg-blue-900/20 border border-blue-800 rounded-lg">
+             <h3 className="text-blue-400 font-bold mb-2 flex items-center gap-2">
+                <span>🚀</span> FINAL OBJECTIVE
+             </h3>
+             <p className="text-gray-300 text-sm">
+                As you complete each task, you will unlock a unique <strong>Completion Key</strong> in Mission Control.
+                <br/><br/>
+                Your ultimate goal: <strong>Gather all keys</strong> from Mission Control and email the complete list to your Game Master (GM) to verify your success and secure the grid permanently.
+             </p>
+          </div>
         </div>
 
         {/* Hints about locations */}

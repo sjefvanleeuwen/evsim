@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { SimulatedERP } from '../../lib/simulation/backend/SimulatedERP';
 import { useGamification } from '../../lib/gamification/GamificationStore';
+import { Modal } from '../common/Modal';
 
 type CustomerType = 'B2B2C_LEASE' | 'B2B_RETAIL';
 type Step = 'CUSTOMER' | 'HARDWARE' | 'INSTALLATION' | 'QUOTE';
@@ -29,6 +30,7 @@ const HARDWARE_OPTIONS = {
 export const CPQWizard: React.FC = () => {
   const [step, setStep] = useState<Step>('CUSTOMER');
   const { completeMission } = useGamification();
+  const [modal, setModal] = useState<{ isOpen: boolean; title: string; message: string; type: 'info' | 'success' | 'warning' | 'error' }>({ isOpen: false, title: '', message: '', type: 'info' });
   const [data, setData] = useState<QuoteData>({
     customerType: 'B2B2C_LEASE',
     customerName: '',
@@ -75,7 +77,13 @@ export const CPQWizard: React.FC = () => {
       totalPrice: calculateTotal()
     });
 
-    alert("Order Submitted! Check the Partner Portal for approval.");
+    setModal({
+      isOpen: true,
+      title: 'Order Submitted',
+      message: 'Check the Partner Portal for approval.',
+      type: 'success'
+    });
+    
     // Reset or redirect?
     setStep('CUSTOMER');
     setData({
@@ -310,6 +318,15 @@ export const CPQWizard: React.FC = () => {
       {step === 'HARDWARE' && renderHardwareStep()}
       {step === 'INSTALLATION' && renderInstallationStep()}
       {step === 'QUOTE' && renderQuoteStep()}
+
+      <Modal
+        isOpen={modal.isOpen}
+        title={modal.title}
+        onClose={() => setModal(prev => ({ ...prev, isOpen: false }))}
+        type={modal.type}
+      >
+        {modal.message}
+      </Modal>
     </div>
   );
 };

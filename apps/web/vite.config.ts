@@ -42,7 +42,7 @@ export default defineConfig(({ command }) => ({
       }
     }) : null
   ],
-  base: '/evsum/', // Base path for GitHub Pages deployment
+  base: './', // Relative base path for flexible deployment
   test: {
     globals: true,
     environment: 'jsdom',

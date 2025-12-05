@@ -9,11 +9,13 @@ import { MissionControl } from './components/gamification/MissionControl'
 import { WelcomeScreen } from './components/gamification/WelcomeScreen'
 import { DDDChallenge } from './components/gamification/DDDChallenge'
 import { AdminPage } from './components/admin/AdminPage'
+import { HEMSSimulator } from './components/hems/HEMSSimulator'
+import { AbbreviationsPage } from './components/AbbreviationsPage'
 import type { VehicleSettings } from './components/VehicleControls'
 
 function App() {
   const [started, setStarted] = useState(false);
-  const [view, setView] = useState<'dashboard' | 'connectors' | 'cpq' | 'portal' | 'installer' | 'architecture'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'connectors' | 'cpq' | 'portal' | 'installer' | 'architecture' | 'hems' | 'glossary'>('dashboard');
   const [simSettings, setSimSettings] = useState<VehicleSettings | null>(null);
 
   // Check for admin route (support /admin, /admin/, and subpaths)
@@ -46,6 +48,10 @@ function App() {
           <QuoteList />
         ) : view === 'architecture' ? (
           <DDDChallenge onComplete={() => {}} onBack={() => setView('dashboard')} />
+        ) : view === 'hems' ? (
+          <HEMSSimulator />
+        ) : view === 'glossary' ? (
+          <AbbreviationsPage />
         ) : (
           <InstallerApp />
         )}

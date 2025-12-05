@@ -1,8 +1,8 @@
 import React from 'react';
 
 interface NavbarProps {
-  currentView: 'dashboard' | 'connectors' | 'cpq' | 'portal' | 'installer' | 'architecture';
-  onNavigate: (view: 'dashboard' | 'connectors' | 'cpq' | 'portal' | 'installer' | 'architecture') => void;
+  currentView: 'dashboard' | 'connectors' | 'cpq' | 'portal' | 'installer' | 'architecture' | 'hems' | 'glossary';
+  onNavigate: (view: 'dashboard' | 'connectors' | 'cpq' | 'portal' | 'installer' | 'architecture' | 'hems' | 'glossary') => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
@@ -75,6 +75,26 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
                   }`}
                 >
                   🏛️ Architecture
+                </button>
+                <button
+                  onClick={() => onNavigate('hems')}
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    currentView === 'hems'
+                      ? 'bg-gray-800 text-white'
+                      : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                  }`}
+                >
+                  🏠 HEMS
+                </button>
+                <button
+                  onClick={() => onNavigate('glossary')}
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    currentView === 'glossary'
+                      ? 'bg-gray-800 text-white'
+                      : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                  }`}
+                >
+                  📚 Glossary
                 </button>
               </div>
             </div>

@@ -81,9 +81,23 @@ class GamificationStore {
     {
       id: 'ddd_master',
       title: 'Domain Architect',
-      description: 'Final Challenge: Organize the EV charging ecosystem into its correct DDD bounded contexts.',
+      description: 'Organize the EV charging ecosystem into its correct DDD bounded contexts.',
       completed: false,
       hint: 'Navigate to "Architecture" in the menu to access the DDD challenge.'
+    },
+    {
+      id: 'hems_handshake',
+      title: 'Grid Protection',
+      description: 'Prevent blackout! Configure HEMS to throttle EV charging when the Heat Pump turns on.',
+      completed: false,
+      hint: 'Go to HEMS -> Connect -> Enable Load Balancing'
+    },
+    {
+      id: 'peak_shaver',
+      title: 'Peak Shaver',
+      description: 'DSO Alert! The neighborhood transformer is overloaded. Reduce your grid import to 0A immediately using V2G.',
+      completed: false,
+      hint: 'HEMS -> Enable V2G -> Discharge to Home'
     }
   ];
 
@@ -222,6 +236,9 @@ class GamificationStore {
   public resetSession() {
     localStorage.removeItem('ev_game_session_id');
     localStorage.removeItem('ev_game_missions');
+    localStorage.removeItem('erp_quotes');
+    localStorage.removeItem('erp_orders');
+    localStorage.removeItem('sim_cdrs');
     window.location.reload();
   }
 

@@ -6,6 +6,7 @@ import { SimulatedAssetStore } from '../../lib/simulation/backend/SimulatedAsset
 import type { Asset } from '../../lib/simulation/data/AssetGenerator';
 import { SimulationClock } from '../../lib/simulation/SimulationClock';
 import { useGamification } from '../../lib/gamification/GamificationStore';
+import { Modal } from '../common/Modal';
 
 // Fix Leaflet default icon issue
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -164,6 +165,17 @@ export const NetworkMap: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchTarget, setSearchTarget] = useState<Asset | null>(null);
   const { completeMission } = useGamification();
+  const [modal, setModal] = useState<{ 
+    isOpen: boolean; 
+    title: string; 
+    message: string; 
+    type: 'info' | 'success' | 'warning' | 'error';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info'
+  });
 
   useEffect(() => {
     const store = SimulatedAssetStore.getInstance();
@@ -193,16 +205,31 @@ export const NetworkMap: React.FC = () => {
           setSearchTarget(target);
           setSelectedAsset(target);
       } else {
-          alert('Asset not found');
+          setModal({
+              isOpen: true,
+              title: 'Error',
+              message: 'Asset not found',
+              type: 'error'
+          });
       }
   };
 
   const handleRemoteStart = () => {
       if (selectedAsset?.id === 'EV-REMOTE-001') {
           completeMission('remote_control');
-          alert('Remote Start Command Sent. Session Initiated.');
+          setModal({
+              isOpen: true,
+              title: 'Success',
+              message: 'Remote Start Command Sent. Session Initiated.',
+              type: 'success'
+          });
       } else {
-          alert('Command Sent.');
+          setModal({
+              isOpen: true,
+              title: 'Info',
+              message: 'Command Sent.',
+              type: 'info'
+          });
       }
   };
 
@@ -298,6 +325,15 @@ export const NetworkMap: React.FC = () => {
             </div>
         )}
       </div>
+
+      <Modal
+        isOpen={modal.isOpen}
+        title={modal.title}
+        onClose={() => setModal(prev => ({ ...prev, isOpen: false }))}
+        type={modal.type}
+      >
+        {modal.message}
+      </Modal>
     </div>
   );
 };
