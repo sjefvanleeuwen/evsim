@@ -1,5 +1,6 @@
 import React from 'react';
 import type { VehicleSettings, ConnectorType } from './VehicleControls';
+import { useGamification } from '../lib/gamification/GamificationStore';
 
 interface ConnectorProps {
 
@@ -16,7 +17,8 @@ interface ConnectorProps {
 }
 
 const ConnectorCard: React.FC<ConnectorProps> = ({ name, id, type, phases, voltage, current, power, description, svg, onSimulate }) => {
-  
+  const { completeMission } = useGamification();
+
   const handleSimulate = () => {
     // Define default simulation parameters for each connector
     let simPhases: 1 | 3 = 1;
@@ -25,6 +27,7 @@ const ConnectorCard: React.FC<ConnectorProps> = ({ name, id, type, phases, volta
     if (id === 'Type 2') {
       simPhases = 3;
       simCurrent = 32; // 22kW
+      completeMission('test_drive');
     } else if (id === 'CCS2') {
       simPhases = 1; // DC doesn't use phases in the same way for calc, but let's keep it simple
       simCurrent = 150; // High current for DC

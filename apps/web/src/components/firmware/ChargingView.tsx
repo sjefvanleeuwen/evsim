@@ -51,7 +51,7 @@ export const ChargingView: React.FC<ChargingViewProps> = ({ energy, duration, po
         <div className="bg-gray-800 rounded-xl p-6 flex flex-col justify-center items-center border border-gray-700">
           <span className="text-gray-400 text-sm uppercase tracking-wider mb-2">Current Cost</span>
           <div className="text-4xl font-bold font-mono text-green-400">
-            ${cost.toFixed(2)}
+            €{cost.toFixed(2)}
           </div>
         </div>
       </div>

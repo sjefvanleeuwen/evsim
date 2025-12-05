@@ -42,6 +42,23 @@ export class SimulatedERP {
   private constructor() {
     this.storage = BrowserStorage.getInstance();
     this.loadFromStorage();
+    
+    // GAMIFICATION: Inject Expansion Quote if not exists
+    if (!Array.from(this.quotes.values()).some(q => q.customerName === 'Albert Heijn - Dam Square')) {
+        const id = 'Q-EXPANSION-001';
+        this.quotes.set(id, {
+            id,
+            customerType: 'B2B_RETAIL',
+            customerName: 'Albert Heijn - Dam Square',
+            email: 'facility.mgr@ah.nl',
+            hardware: { model: 'ChargePoint Express Plus (x4)', price: 120000 },
+            installation: { cableLength: 50, excavation: true, panelUpgrade: true, price: 45000 },
+            totalPrice: 165000,
+            status: 'PENDING_APPROVAL',
+            createdAt: new Date().toISOString()
+        });
+        this.saveToStorage();
+    }
   }
 
   private loadFromStorage() {

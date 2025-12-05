@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { SimulatedCDRStore, type CDR } from '../../lib/simulation/backend/SimulatedCDRStore';
+import { useGamification } from '../../lib/gamification/GamificationStore';
 
 export const SessionList: React.FC = () => {
   const [cdrs, setCdrs] = useState<CDR[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const { completeMission } = useGamification();
 
   useEffect(() => {
     const store = SimulatedCDRStore.getInstance();
@@ -19,6 +21,18 @@ export const SessionList: React.FC = () => {
 
   const handlePrev = () => setCurrentPage(p => Math.max(1, p - 1));
   const handleNext = () => setCurrentPage(p => Math.min(totalPages, p + 1));
+
+  const handleAudit = (sessionId: string, cost: number, energy: number) => {
+    if (sessionId === 'SES-VIP-999') {
+        completeMission('audit_session');
+        alert('Session Audited. Revenue Verified.');
+    } else if (cost === 0 && energy > 10) {
+        completeMission('detect_theft');
+        alert('SECURITY ALERT: Energy Theft Flagged! Investigation started.');
+    } else {
+        alert('Session Verified: No anomalies found.');
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -47,6 +61,7 @@ export const SessionList: React.FC = () => {
                   <th className="px-4 py-3">Cost</th>
                   <th className="px-4 py-3">End Time</th>
                   <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-800 bg-gray-900/50">
@@ -61,6 +76,14 @@ export const SessionList: React.FC = () => {
                       <span className="px-2 py-1 text-xs font-bold bg-green-900/30 text-green-400 rounded border border-green-800">
                         {cdr.status}
                       </span>
+                    </td>
+                    <td className="px-4 py-3">
+                        <button 
+                            onClick={() => handleAudit(cdr.sessionId, cdr.totalCost, cdr.totalEnergy)}
+                            className="text-xs bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded"
+                        >
+                            Audit
+                        </button>
                     </td>
                   </tr>
                 ))}

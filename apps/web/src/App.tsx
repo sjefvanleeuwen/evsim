@@ -5,9 +5,12 @@ import { CPQWizard } from './components/cpq/CPQWizard'
 import { QuoteList } from './components/portal/QuoteList'
 import { InstallerApp } from './components/installer/InstallerApp'
 import { Navbar } from './components/Navbar'
+import { MissionControl } from './components/gamification/MissionControl'
+import { WelcomeScreen } from './components/gamification/WelcomeScreen'
 import type { VehicleSettings } from './components/VehicleControls'
 
 function App() {
+  const [started, setStarted] = useState(false);
   const [view, setView] = useState<'dashboard' | 'connectors' | 'cpq' | 'portal' | 'installer'>('dashboard');
   const [simSettings, setSimSettings] = useState<VehicleSettings | null>(null);
 
@@ -15,6 +18,10 @@ function App() {
     setSimSettings(settings);
     setView('dashboard');
   };
+
+  if (!started) {
+    return <WelcomeScreen onStart={() => setStarted(true)} />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-950">
@@ -32,6 +39,7 @@ function App() {
           <InstallerApp />
         )}
       </main>
+      <MissionControl />
     </div>
   )
 

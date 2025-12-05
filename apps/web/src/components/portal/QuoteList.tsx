@@ -4,11 +4,13 @@ import { SimulatedAssetStore } from '../../lib/simulation/backend/SimulatedAsset
 import { SessionList } from './SessionList';
 import { NetworkMap } from './NetworkMap';
 import { OccupancyView } from './OccupancyView';
+import { useGamification } from '../../lib/gamification/GamificationStore';
 
 export const QuoteList: React.FC = () => {
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [activeTab, setActiveTab] = useState<'orders' | 'sessions' | 'map' | 'occupancy'>('orders');
+  const { completeMission } = useGamification();
 
   useEffect(() => {
     // Ensure Simulation is running
@@ -24,6 +26,9 @@ export const QuoteList: React.FC = () => {
 
   const handleApprove = (quoteId: string) => {
     SimulatedERP.getInstance().approveQuote(quoteId);
+    if (quoteId === 'Q-EXPANSION-001') {
+        completeMission('approve_expansion');
+    }
   };
 
   return (
@@ -100,7 +105,7 @@ export const QuoteList: React.FC = () => {
                 
                 <div className="grid grid-cols-2 gap-2 text-sm text-gray-300 mb-4">
                   <div>Hardware: <span className="text-white">{quote.hardware.model}</span></div>
-                  <div>Total: <span className="text-white font-mono">${quote.totalPrice.toLocaleString()}</span></div>
+                  <div>Total: <span className="text-white font-mono">€{quote.totalPrice.toLocaleString()}</span></div>
                   <div>Type: <span className="text-white">{quote.customerType === 'B2B2C_LEASE' ? 'Lease (Home)' : 'Retail (Biz)'}</span></div>
                   <div>Date: <span className="text-white">{new Date(quote.createdAt).toLocaleDateString()}</span></div>
                 </div>

@@ -21,6 +21,34 @@ export class SimulatedAssetStore {
 
         if (type === 'INIT') {
             this.assets = assets;
+            
+            // GAMIFICATION: Inject Faulted Asset
+            const target = this.assets.find(a => a.city === 'Amsterdam');
+            if (target) {
+                target.id = 'EV-CRITICAL-001';
+                target.status = 'FAULTED';
+                target.address = 'Damrak 1, Amsterdam';
+            }
+
+            // GAMIFICATION: Inject Remote Control Target (Create New to ensure exact location)
+            // Remove any existing one first to avoid duplicates if worker re-sends INIT (unlikely but safe)
+            this.assets = this.assets.filter(a => a.id !== 'EV-REMOTE-001');
+            
+            const remoteAsset: Asset = {
+                id: 'EV-REMOTE-001',
+                city: 'Rotterdam',
+                address: 'Erasmusbrug, Rotterdam',
+                lat: 51.9089,
+                lon: 4.4876,
+                status: 'AVAILABLE',
+                locationType: 'PUBLIC',
+                model: 'ChargePoint CP6000',
+                lastHeartbeat: new Date().toISOString()
+            };
+            
+            // Add to beginning of array so it's easily found/rendered
+            this.assets.unshift(remoteAsset);
+
             this.notifyListeners();
         } else if (type === 'TICK') {
             // Update Time

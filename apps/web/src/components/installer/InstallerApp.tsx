@@ -1,15 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { SimulatedERP, type Order, type Quote } from '../../lib/simulation/backend/SimulatedERP';
 import { SimulatedProvisioning } from '../../lib/simulation/backend/SimulatedProvisioning';
+import { useGamification } from '../../lib/gamification/GamificationStore';
 
-type View = 'JOB_LIST' | 'JOB_DETAIL' | 'COMMISSIONING';
+type View = 'JOB_LIST' | 'JOB_DETAIL' | 'COMMISSIONING' | 'DIAGNOSTICS';
 
 export const InstallerApp: React.FC = () => {
   const [view, setView] = useState<View>('JOB_LIST');
   const [orders, setOrders] = useState<Order[]>([]);
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const { completeMission } = useGamification();
   
+  // Diagnostics
+  const [searchId, setSearchId] = useState('');
+  const [diagnosticResult, setDiagnosticResult] = useState<string | null>(null);
+
   // Commissioning Form
   const [serialNumber, setSerialNumber] = useState('');
   const [cpId, setCpId] = useState('');
@@ -60,11 +66,218 @@ export const InstallerApp: React.FC = () => {
     }
   };
 
+  const [terminalInput, setTerminalInput] = useState('');
+
+  const handleDiagnosticSearch = () => {
+    if (searchId === 'EV-CRITICAL-001') {
+        setDiagnosticResult('CRITICAL_FAILURE');
+    } else if (searchId === 'EV-OMEGA-13') {
+        setDiagnosticResult('LOCKED');
+    } else if (searchId === 'EV-DANGER-HIGH') {
+        setDiagnosticResult('DANGER');
+    } else {
+        setDiagnosticResult('ONLINE');
+    }
+  };
+
+  const handleReboot = () => {
+    completeMission('fix_charger');
+    setDiagnosticResult('REBOOTING...');
+    setTimeout(() => {
+        setDiagnosticResult('ONLINE');
+        alert('System Rebooted Successfully. Unit is back online.');
+    }, 2000);
+  };
+
+  const handleEmergencyStop = () => {
+    completeMission('emergency_stop');
+    setDiagnosticResult('SAFE');
+    alert('EMERGENCY STOP EXECUTED. HAZARD CONTAINED.');
+  };
+
+  const handleUnlock = () => {
+      if (terminalInput === 'ROOT') {
+          completeMission('unlock_protocol');
+          setDiagnosticResult('ONLINE');
+          alert('ACCESS GRANTED. PROTOCOL OMEGA DISABLED.');
+      } else {
+          alert('ACCESS DENIED. INCORRECT PASSWORD.');
+      }
+  };
+
+  const [logs, setLogs] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (view === 'DIAGNOSTICS' && diagnosticResult) {
+        const interval = setInterval(() => {
+            const timestamp = new Date().toISOString().split('T')[1].split('.')[0];
+            let newLog = '';
+            
+            if (diagnosticResult === 'LOCKED') {
+                const msgs = [
+                    `[${timestamp}] [SYS] Boot sequence initiated...`,
+                    `[${timestamp}] [ERR] Integrity check failed.`,
+                    `[${timestamp}] [SEC] LOCKDOWN MODE ENGAGED.`,
+                    `[${timestamp}] [SEC] Ref: 0x52 0x4F 0x4F 0x54`,
+                    `[${timestamp}] [SYS] Waiting for admin override...`
+                ];
+                newLog = msgs[Math.floor(Math.random() * msgs.length)];
+            } else if (diagnosticResult === 'CRITICAL_FAILURE') {
+                newLog = `[${timestamp}] [CRIT] HEARTBEAT TIMEOUT - CONTROLLER UNRESPONSIVE`;
+            } else if (diagnosticResult === 'DANGER') {
+                const msgs = [
+                    `[${timestamp}] [WARN] TEMP CRITICAL: 85°C`,
+                    `[${timestamp}] [ERR] ISOLATION FAULT DETECTED`,
+                    `[${timestamp}] [WARN] CURRENT LEAKAGE: 300mA`,
+                    `[${timestamp}] [SYS] SAFETY INTERLOCK: FAILED`
+                ];
+                newLog = msgs[Math.floor(Math.random() * msgs.length)];
+            } else {
+                const actions = ['Heartbeat', 'StatusNotification', 'MeterValues'];
+                const action = actions[Math.floor(Math.random() * actions.length)];
+                newLog = `[${timestamp}] [OCPP] -> ${action}Request { "connectorId": 1, "status": "Available" }`;
+            }
+            
+            setLogs(prev => [...prev.slice(-8), newLog]);
+        }, 1500);
+        return () => clearInterval(interval);
+    } else {
+        setLogs([]);
+    }
+  }, [view, diagnosticResult]);
+
+  const renderDiagnostics = () => (
+    <div className="space-y-6">
+        <h2 className="text-xl font-bold text-gray-400 uppercase tracking-wider mb-4">Field Diagnostics</h2>
+        <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
+            <label className="block text-sm font-medium text-gray-400 mb-2">Enter Charger ID</label>
+            <div className="flex space-x-2">
+                <input 
+                    type="text" 
+                    value={searchId}
+                    onChange={(e) => setSearchId(e.target.value)}
+                    className="flex-1 bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                    placeholder="e.g. EV-12345"
+                />
+                <button 
+                    onClick={handleDiagnosticSearch}
+                    className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded font-medium"
+                >
+                    Scan
+                </button>
+            </div>
+        </div>
+
+        {diagnosticResult && (
+            <div className={`p-6 rounded-lg border ${
+                diagnosticResult === 'CRITICAL_FAILURE' ? 'bg-red-900/20 border-red-800' : 
+                diagnosticResult === 'LOCKED' ? 'bg-purple-900/20 border-purple-800' :
+                diagnosticResult === 'ONLINE' ? 'bg-green-900/20 border-green-800' :
+                'bg-gray-800 border-gray-700'
+            }`}>
+                <div className="flex items-center justify-between mb-4">
+                    <span className="text-gray-400">Status:</span>
+                    <span className={`font-bold ${
+                        diagnosticResult === 'CRITICAL_FAILURE' ? 'text-red-500 animate-pulse' : 
+                        diagnosticResult === 'LOCKED' ? 'text-purple-500' :
+                        diagnosticResult === 'ONLINE' ? 'text-green-500' : 'text-yellow-500'
+                    }`}>
+                        {diagnosticResult}
+                    </span>
+                </div>
+                
+                {diagnosticResult === 'CRITICAL_FAILURE' && (
+                    <div className="space-y-4">
+                        <div className="text-sm text-red-400 font-mono bg-black p-3 rounded">
+                            ERROR: HEARTBEAT_TIMEOUT<br/>
+                            ERROR: CONTROLLER_UNRESPONSIVE<br/>
+                            RECOMMENDATION: HARD_RESET
+                        </div>
+                        <button 
+                            onClick={handleReboot}
+                            className="w-full bg-red-600 hover:bg-red-500 text-white py-3 rounded font-bold uppercase tracking-wider shadow-lg animate-pulse"
+                        >
+                            INITIATE HARD REBOOT
+                        </button>
+                    </div>
+                )}
+
+                {diagnosticResult === 'DANGER' && (
+                    <div className="space-y-4">
+                        <div className="text-sm text-red-400 font-mono bg-black p-3 rounded">
+                            WARNING: HIGH VOLTAGE HAZARD<br/>
+                            ISOLATION FAULT DETECTED<br/>
+                            IMMEDIATE STOP REQUIRED
+                        </div>
+                        <button 
+                            onClick={handleEmergencyStop}
+                            className="w-full bg-red-600 hover:bg-red-500 text-white py-3 rounded font-bold uppercase tracking-wider shadow-lg animate-pulse"
+                        >
+                            EMERGENCY STOP
+                        </button>
+                    </div>
+                )}
+
+                {diagnosticResult === 'LOCKED' && (
+                    <div className="space-y-4">
+                        <div className="text-sm text-purple-400 font-mono bg-black p-3 rounded">
+                            SECURITY LOCKDOWN ACTIVE<br/>
+                            SYSTEM LOGS DUMPED BELOW<br/>
+                            ENTER PASSWORD TO UNLOCK
+                        </div>
+                        <div className="flex space-x-2">
+                            <input 
+                                type="text" 
+                                value={terminalInput}
+                                onChange={(e) => setTerminalInput(e.target.value)}
+                                className="flex-1 bg-black border border-purple-500/50 rounded px-3 py-2 text-green-400 font-mono focus:outline-none"
+                                placeholder="PASSWORD"
+                            />
+                            <button 
+                                onClick={handleUnlock}
+                                className="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded font-bold"
+                            >
+                                UNLOCK
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Live Logs */}
+                <div className="mt-4 bg-black rounded border border-gray-700 p-3 font-mono text-xs h-48 overflow-y-auto">
+                    <div className="text-gray-500 border-b border-gray-800 pb-1 mb-2">LIVE PROTOCOL INSPECTOR</div>
+                    {logs.map((log, i) => (
+                        <div key={i} className={`${
+                            log.includes('ERR') || log.includes('CRIT') ? 'text-red-500' : 
+                            log.includes('SEC') ? 'text-purple-400' : 'text-green-400'
+                        }`}>
+                            {log}
+                        </div>
+                    ))}
+                    {logs.length === 0 && <div className="text-gray-600 italic">Waiting for stream...</div>}
+                </div>
+            </div>
+        )}
+        
+        <button onClick={() => setView('JOB_LIST')} className="text-gray-400 hover:text-white text-sm">
+            &larr; Back to Jobs
+        </button>
+    </div>
+  );
+
   const renderJobList = () => {
     const jobs = getMyJobs();
     return (
       <div className="space-y-4">
-        <h2 className="text-xl font-bold text-gray-400 uppercase tracking-wider mb-4">My Jobs</h2>
+        <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold text-gray-400 uppercase tracking-wider">My Jobs</h2>
+            <button 
+                onClick={() => setView('DIAGNOSTICS')}
+                className="text-xs bg-gray-800 hover:bg-gray-700 text-blue-400 border border-blue-900 px-3 py-1 rounded"
+            >
+                Open Diagnostics Tool
+            </button>
+        </div>
         {jobs.length === 0 && (
           <div className="p-8 text-center text-gray-500 bg-gray-900 rounded-lg border border-gray-800">
             No pending installation jobs.
@@ -200,6 +413,7 @@ export const InstallerApp: React.FC = () => {
       {view === 'JOB_LIST' && renderJobList()}
       {view === 'JOB_DETAIL' && renderJobDetail()}
       {view === 'COMMISSIONING' && renderCommissioning()}
+      {view === 'DIAGNOSTICS' && renderDiagnostics()}
     </div>
   );
 };

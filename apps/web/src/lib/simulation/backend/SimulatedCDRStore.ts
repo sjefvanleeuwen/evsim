@@ -26,6 +26,46 @@ export class SimulatedCDRStore {
   private constructor() {
     this.storage = BrowserStorage.getInstance();
     this.loadFromStorage();
+    
+    // GAMIFICATION: Inject VIP Session
+    if (!this.cdrs.some(c => c.sessionId === 'SES-VIP-999')) {
+        this.cdrs.unshift({
+            id: 'CDR-VIP-999',
+            sessionId: 'SES-VIP-999',
+            locationId: 'Amsterdam - Central',
+            evseId: 'EV-VIP-001',
+            authId: 'RFID-GOLD-MEMBER',
+            startTime: new Date(Date.now() - 3600000).toISOString(),
+            stopTime: new Date().toISOString(),
+            totalEnergy: 85.5,
+            totalCost: 125.00,
+            currency: 'EUR',
+            meterStart: 1000,
+            meterStop: 1085.5,
+            status: 'COMPLETED'
+        });
+        this.saveToStorage();
+    }
+
+    // GAMIFICATION: Inject Hacked Session (Theft)
+    if (!this.cdrs.some(c => c.sessionId === 'SES-HACK-007')) {
+        this.cdrs.unshift({
+            id: 'CDR-HACK-007',
+            sessionId: 'SES-HACK-007',
+            locationId: 'Rotterdam - Port',
+            evseId: 'EV-PORT-99',
+            authId: 'UNKNOWN',
+            startTime: new Date(Date.now() - 7200000).toISOString(),
+            stopTime: new Date().toISOString(),
+            totalEnergy: 150.0, // High energy
+            totalCost: 0.00,    // Zero cost (Theft)
+            currency: 'EUR',
+            meterStart: 5000,
+            meterStop: 5150,
+            status: 'COMPLETED'
+        });
+        this.saveToStorage();
+    }
   }
 
   public static getInstance(): SimulatedCDRStore {
@@ -43,7 +83,22 @@ export class SimulatedCDRStore {
   }
 
   private saveToStorage() {
-    this.storage.setItem('sim_cdrs', this.cdrs);
+    // Limit to last 200 CDRs to prevent QuotaExceededError
+    // BUT preserve gamification sessions
+    const limit = 200;
+    const criticalIds = ['SES-VIP-999', 'SES-HACK-007'];
+    
+    let toSave = this.cdrs.slice(0, limit);
+    
+    // Ensure critical sessions are preserved even if they fall out of the limit
+    const criticalCdrs = this.cdrs.filter(c => criticalIds.includes(c.sessionId));
+    criticalCdrs.forEach(critical => {
+        if (!toSave.some(c => c.sessionId === critical.sessionId)) {
+            toSave.push(critical);
+        }
+    });
+
+    this.storage.setItem('sim_cdrs', toSave);
   }
 
   public addCDR(cdr: CDR) {

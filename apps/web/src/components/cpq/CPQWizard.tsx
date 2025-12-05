@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { SimulatedERP } from '../../lib/simulation/backend/SimulatedERP';
+import { useGamification } from '../../lib/gamification/GamificationStore';
 
 type CustomerType = 'B2B2C_LEASE' | 'B2B_RETAIL';
 type Step = 'CUSTOMER' | 'HARDWARE' | 'INSTALLATION' | 'QUOTE';
@@ -27,6 +28,7 @@ const HARDWARE_OPTIONS = {
 
 export const CPQWizard: React.FC = () => {
   const [step, setStep] = useState<Step>('CUSTOMER');
+  const { completeMission } = useGamification();
   const [data, setData] = useState<QuoteData>({
     customerType: 'B2B2C_LEASE',
     customerName: '',
@@ -48,6 +50,14 @@ export const CPQWizard: React.FC = () => {
   const handleSubmit = () => {
     const hwOption = HARDWARE_OPTIONS[data.customerType].find(h => h.id === data.hardwareId);
     
+    // Check if "megacorp" is in name OR email to be more forgiving
+    const isMegaCorp = data.customerName.toLowerCase().includes('megacorp') || 
+                       data.email.toLowerCase().includes('megacorp');
+
+    if (isMegaCorp && data.hardwareId === 'BIZ_150') {
+        completeMission('submit_quote');
+    }
+
     SimulatedERP.getInstance().createQuote({
       customerType: data.customerType,
       customerName: data.customerName || 'Guest User',
@@ -150,7 +160,7 @@ export const CPQWizard: React.FC = () => {
           >
             <div className="text-3xl mb-2">{opt.image}</div>
             <h3 className="text-xl font-bold text-white">{opt.name}</h3>
-            <p className="text-blue-400 font-mono mt-2">${opt.price.toLocaleString()}</p>
+            <p className="text-blue-400 font-mono mt-2">€{opt.price.toLocaleString()}</p>
           </button>
         ))}
       </div>
@@ -232,7 +242,7 @@ export const CPQWizard: React.FC = () => {
             <h3 className="text-lg font-medium text-white mb-4">Hardware</h3>
             <div className="flex justify-between text-gray-300">
               <span>{hw?.name}</span>
-              <span>${hw?.price.toLocaleString()}</span>
+              <span>€{hw?.price.toLocaleString()}</span>
             </div>
           </div>
 
@@ -241,16 +251,16 @@ export const CPQWizard: React.FC = () => {
             <div className="space-y-2 text-gray-300">
               <div className="flex justify-between">
                 <span>Base Installation Fee</span>
-                <span>$500</span>
+                <span>€500</span>
               </div>
               <div className="flex justify-between">
-                <span>Cabling ({data.cableLength}m @ $15/m)</span>
-                <span>${data.cableLength * 15}</span>
+                <span>Cabling ({data.cableLength}m @ €15/m)</span>
+                <span>€{data.cableLength * 15}</span>
               </div>
               {data.surfaceWork && (
                 <div className="flex justify-between">
                   <span>Excavation / Surface Work</span>
-                  <span>$200</span>
+                  <span>€200</span>
                 </div>
               )}
             </div>
@@ -259,7 +269,7 @@ export const CPQWizard: React.FC = () => {
           <div className="p-6 bg-gray-900">
             <div className="flex justify-between items-center">
               <span className="text-xl font-bold text-white">Total Estimated Cost</span>
-              <span className="text-2xl font-bold text-green-400">${total.toLocaleString()}</span>
+              <span className="text-2xl font-bold text-green-400">€{total.toLocaleString()}</span>
             </div>
           </div>
         </div>

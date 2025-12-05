@@ -39,7 +39,7 @@ export const SummaryView: React.FC<SummaryViewProps> = ({ energy, duration, cost
           </div>
           <div className="flex justify-between items-center border-b border-gray-700 pb-2">
             <span className="text-gray-400 text-sm">Total Cost</span>
-            <span className="font-mono text-xl text-green-400">${cost.toFixed(2)}</span>
+            <span className="font-mono text-xl text-green-400">€{cost.toFixed(2)}</span>
           </div>
         </div>
 
