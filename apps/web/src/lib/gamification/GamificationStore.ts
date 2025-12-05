@@ -77,6 +77,13 @@ class GamificationStore {
       description: 'Perform a test charge simulation using a "Type 2" connector.',
       completed: false,
       hint: 'Connectors & Standards -> Type 2 -> Simulate'
+    },
+    {
+      id: 'ddd_master',
+      title: 'Domain Architect',
+      description: 'Final Challenge: Organize the EV charging ecosystem into its correct DDD bounded contexts.',
+      completed: false,
+      hint: 'Navigate to "Architecture" in the menu to access the DDD challenge.'
     }
   ];
 
@@ -98,6 +105,27 @@ class GamificationStore {
         }
     }
     this.sessionId = sid;
+
+    // Load persisted mission state
+    const savedMissions = localStorage.getItem('ev_game_missions');
+    if (savedMissions) {
+        try {
+            const parsed = JSON.parse(savedMissions) as Mission[];
+            this.missions = this.missions.map(m => {
+                const saved = parsed.find(pm => pm.id === m.id);
+                if (saved && saved.completed) {
+                    return { ...m, completed: true, completionKey: saved.completionKey };
+                }
+                return m;
+            });
+        } catch (e) {
+            console.error('Failed to load mission state', e);
+        }
+    }
+  }
+
+  private saveState() {
+      localStorage.setItem('ev_game_missions', JSON.stringify(this.missions));
   }
 
   public static getInstance(): GamificationStore {
@@ -111,7 +139,7 @@ class GamificationStore {
     return this.missions;
   }
 
-  private calculateChecksum(data: string): string {
+  public static calculateChecksum(data: string): string {
     let crc = 0;
     for (let i = 0; i < data.length; i++) {
         crc = (crc + data.charCodeAt(i)) % 0xFFFF;
@@ -119,20 +147,82 @@ class GamificationStore {
     return crc.toString(16).toUpperCase().padStart(4, '0');
   }
 
-  public completeMission(id: string) {
+  public static verifyKey(key: string): { valid: boolean; data?: any; error?: string } {
+    if (!key.startsWith('KEY-')) return { valid: false, error: 'Invalid format' };
+    
+    try {
+        const decoded = atob(key.substring(4));
+        const lastColonIndex = decoded.lastIndexOf(':');
+        if (lastColonIndex === -1) return { valid: false, error: 'Malformed key' };
+        
+        const payload = decoded.substring(0, lastColonIndex);
+        const checksum = decoded.substring(lastColonIndex + 1);
+        
+        const expectedChecksum = GamificationStore.calculateChecksum(payload);
+        
+        if (checksum !== expectedChecksum) {
+            return { valid: false, error: 'Invalid checksum' };
+        }
+
+        // Parse payload
+        // Format: MissionID:SessionID[:Metadata]
+        const parts = payload.split(':');
+        if (parts.length < 2) return { valid: false, error: 'Invalid payload structure' };
+
+        const missionId = parts[0];
+        const sessionId = parts[1];
+        let metadata = null;
+
+        if (parts.length > 2) {
+            try {
+                // Rejoin the rest in case metadata contained colons
+                const metadataStr = parts.slice(2).join(':');
+                metadata = JSON.parse(metadataStr);
+            } catch (e) {
+                // Metadata might not be JSON or might be simple string? 
+                // In completeMission we do JSON.stringify(metadata)
+            }
+        }
+
+        return { 
+            valid: true, 
+            data: {
+                missionId,
+                sessionId,
+                metadata
+            }
+        };
+
+    } catch (e) {
+        return { valid: false, error: 'Decoding failed' };
+    }
+  }
+
+  public completeMission(id: string, metadata?: Record<string, any>) {
     const mission = this.missions.find(m => m.id === id);
     if (mission && !mission.completed) {
       mission.completed = true;
       
-      // Generate payload: MissionID + SessionID
-      const payload = `${id}:${this.sessionId}`;
-      const checksum = this.calculateChecksum(payload);
+      // Generate payload: MissionID + SessionID + Metadata
+      let payload = `${id}:${this.sessionId}`;
+      if (metadata) {
+          payload += `:${JSON.stringify(metadata)}`;
+      }
+
+      const checksum = GamificationStore.calculateChecksum(payload);
       
       // Key Format: KEY-{Base64(Payload:Checksum)}
       mission.completionKey = `KEY-${btoa(`${payload}:${checksum}`)}`;
       
+      this.saveState();
       this.notifyListeners();
     }
+  }
+
+  public resetSession() {
+    localStorage.removeItem('ev_game_session_id');
+    localStorage.removeItem('ev_game_missions');
+    window.location.reload();
   }
 
   public isAllCompleted(): boolean {
@@ -144,7 +234,7 @@ class GamificationStore {
     
     const timestamp = Date.now().toString(36).toUpperCase();
     const payload = `AGENT-${this.sessionId}-COMPLETE-${timestamp}`;
-    const checksum = this.calculateChecksum(payload);
+    const checksum = GamificationStore.calculateChecksum(payload);
     
     return `${payload}-${checksum}`;
   }
@@ -173,7 +263,8 @@ export const useGamification = () => {
 
   return {
     missions,
-    completeMission: (id: string) => store.completeMission(id),
+    completeMission: (id: string, metadata?: Record<string, any>) => store.completeMission(id, metadata),
+    resetSession: () => store.resetSession(),
     isComplete: store.isAllCompleted(),
     completionCode: store.generateCompletionCode()
   };

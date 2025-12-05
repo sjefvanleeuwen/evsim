@@ -32,8 +32,8 @@ export const QuoteList: React.FC = () => {
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="flex justify-between items-center mb-8">
+    <div className={activeTab === 'map' ? 'h-[calc(100vh-4rem)] flex flex-col overflow-hidden' : 'p-6 max-w-6xl mx-auto'}>
+      <div className={`flex justify-between items-center ${activeTab === 'map' ? 'p-4 bg-gray-900 border-b border-gray-800' : 'mb-8'}`}>
         <h1 className="text-3xl font-bold text-white">Partner Portal</h1>
         <div className="flex space-x-2 bg-gray-800 p-1 rounded-lg">
           <button 
@@ -72,7 +72,9 @@ export const QuoteList: React.FC = () => {
       </div>
       
       {activeTab === 'map' ? (
-        <NetworkMap />
+        <div className="flex-1 overflow-hidden">
+          <NetworkMap />
+        </div>
       ) : activeTab === 'occupancy' ? (
         <OccupancyView />
       ) : activeTab === 'sessions' ? (

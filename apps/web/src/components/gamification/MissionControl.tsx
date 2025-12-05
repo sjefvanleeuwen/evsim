@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useGamification } from '../../lib/gamification/GamificationStore';
 
 export const MissionControl: React.FC = () => {
-  const { missions, isComplete, completionCode } = useGamification();
+  const { missions, isComplete, completionCode, resetSession } = useGamification();
   const [minimized, setMinimized] = useState(false);
 
   if (minimized) {
@@ -122,6 +122,43 @@ export const MissionControl: React.FC = () => {
             </p>
           </div>
         )}
+      </div>
+
+      {/* Footer Actions */}
+      <div className="bg-gray-800 px-4 py-3 border-t border-gray-700 flex justify-between items-center">
+        <button
+            onClick={() => {
+                const allKeys = missions
+                    .filter(m => m.completed && m.completionKey)
+                    .map(m => `${m.title}: ${m.completionKey}`)
+                    .join('\n');
+                if (allKeys) {
+                    navigator.clipboard.writeText(allKeys);
+                    alert('All keys copied to clipboard!');
+                } else {
+                    alert('No keys to copy yet!');
+                }
+            }}
+            className="text-xs bg-blue-900 hover:bg-blue-800 text-blue-100 px-3 py-1.5 rounded transition-colors flex items-center gap-1"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+            </svg>
+            Copy Keys
+        </button>
+        <button
+            onClick={() => {
+                if (confirm('Are you sure you want to reset your session? All progress will be lost.')) {
+                    resetSession();
+                }
+            }}
+            className="text-xs bg-red-900 hover:bg-red-800 text-red-100 px-3 py-1.5 rounded transition-colors flex items-center gap-1"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Reset
+        </button>
       </div>
     </div>
   );

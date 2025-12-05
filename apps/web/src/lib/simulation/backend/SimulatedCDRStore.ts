@@ -27,6 +27,11 @@ export class SimulatedCDRStore {
     this.storage = BrowserStorage.getInstance();
     this.loadFromStorage();
     
+    // Generate historical CDRs if we don't have enough
+    if (this.cdrs.length < 1000) {
+        this.generateHistoricalCDRs(10000);
+    }
+    
     // GAMIFICATION: Inject VIP Session
     if (!this.cdrs.some(c => c.sessionId === 'SES-VIP-999')) {
         this.cdrs.unshift({
@@ -83,9 +88,10 @@ export class SimulatedCDRStore {
   }
 
   private saveToStorage() {
-    // Limit to last 200 CDRs to prevent QuotaExceededError
+    // Limit storage to 500 CDRs to prevent QuotaExceededError
     // BUT preserve gamification sessions
-    const limit = 200;
+    // Note: We keep 10K in memory, only save 500 to localStorage
+    const limit = 500;
     const criticalIds = ['SES-VIP-999', 'SES-HACK-007'];
     
     let toSave = this.cdrs.slice(0, limit);
@@ -122,5 +128,61 @@ export class SimulatedCDRStore {
 
   private notifyListeners() {
     this.listeners.forEach(l => l(this.cdrs));
+  }
+
+  private generateHistoricalCDRs(count: number) {
+    console.log(`[SimulatedCDRStore] Generating ${count} historical CDRs...`);
+    
+    const cities = ['Amsterdam', 'Rotterdam', 'Utrecht', 'Den Haag', 'Eindhoven', 'Groningen', 'Maastricht', 'Nijmegen'];
+    const locations = ['Central Station', 'Shopping Mall', 'Office Park', 'Residential', 'Albert Heijn', 'Sports Complex', 'Hospital', 'University'];
+    const authTypes = ['RFID', 'APP', 'PLUG_AND_CHARGE', 'CREDIT_CARD'];
+    
+    const now = Date.now();
+    const oneDay = 24 * 60 * 60 * 1000;
+    
+    for (let i = 0; i < count; i++) {
+        // Random time in the past 30 days
+        const daysAgo = Math.random() * 30;
+        const startTime = new Date(now - daysAgo * oneDay);
+        
+        // Session duration: 15 min to 8 hours
+        const durationMs = (15 + Math.random() * 465) * 60 * 1000;
+        const stopTime = new Date(startTime.getTime() + durationMs);
+        
+        // Energy: 5 kWh to 80 kWh based on duration
+        const durationHours = durationMs / (60 * 60 * 1000);
+        const avgPower = 7 + Math.random() * 15; // 7-22 kW
+        const energy = Math.round(avgPower * durationHours * 10) / 10;
+        
+        // Cost: €0.35/kWh average
+        const rate = 0.30 + Math.random() * 0.15;
+        const cost = Math.round(energy * rate * 100) / 100;
+        
+        const city = cities[Math.floor(Math.random() * cities.length)];
+        const location = locations[Math.floor(Math.random() * locations.length)];
+        const authType = authTypes[Math.floor(Math.random() * authTypes.length)];
+        
+        this.cdrs.push({
+            id: `CDR-HIST-${i.toString().padStart(5, '0')}`,
+            sessionId: `SES-${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
+            locationId: `${city} - ${location}`,
+            evseId: `EV-${city.substring(0, 3).toUpperCase()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
+            authId: `${authType}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+            startTime: startTime.toISOString(),
+            stopTime: stopTime.toISOString(),
+            totalEnergy: energy,
+            totalCost: cost,
+            currency: 'EUR',
+            meterStart: Math.floor(Math.random() * 10000),
+            meterStop: Math.floor(Math.random() * 10000) + energy,
+            status: Math.random() > 0.02 ? 'COMPLETED' : 'REJECTED'
+        });
+    }
+    
+    // Sort by start time (newest first)
+    this.cdrs.sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
+    
+    // Don't save to localStorage - keep in memory only to avoid quota issues
+    console.log(`[SimulatedCDRStore] Generated ${count} historical CDRs`);
   }
 }

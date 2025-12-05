@@ -1,8 +1,8 @@
 import React from 'react';
 
 interface NavbarProps {
-  currentView: 'dashboard' | 'connectors' | 'cpq' | 'portal' | 'installer';
-  onNavigate: (view: 'dashboard' | 'connectors' | 'cpq' | 'portal' | 'installer') => void;
+  currentView: 'dashboard' | 'connectors' | 'cpq' | 'portal' | 'installer' | 'architecture';
+  onNavigate: (view: 'dashboard' | 'connectors' | 'cpq' | 'portal' | 'installer' | 'architecture') => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
@@ -12,7 +12,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <span className="text-green-400 font-bold text-xl tracking-wider">CHARGEPOINT</span>
+              <span className="text-green-400 font-bold text-xl tracking-wider">EV ESCAPE ROOM</span>
             </div>
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-4">
@@ -65,6 +65,16 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
                   }`}
                 >
                   Installer App
+                </button>
+                <button
+                  onClick={() => onNavigate('architecture')}
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    currentView === 'architecture'
+                      ? 'bg-gray-800 text-white'
+                      : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                  }`}
+                >
+                  🏛️ Architecture
                 </button>
               </div>
             </div>

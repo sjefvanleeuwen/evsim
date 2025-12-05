@@ -7,12 +7,21 @@ import { InstallerApp } from './components/installer/InstallerApp'
 import { Navbar } from './components/Navbar'
 import { MissionControl } from './components/gamification/MissionControl'
 import { WelcomeScreen } from './components/gamification/WelcomeScreen'
+import { DDDChallenge } from './components/gamification/DDDChallenge'
+import { AdminPage } from './components/admin/AdminPage'
 import type { VehicleSettings } from './components/VehicleControls'
 
 function App() {
   const [started, setStarted] = useState(false);
-  const [view, setView] = useState<'dashboard' | 'connectors' | 'cpq' | 'portal' | 'installer'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'connectors' | 'cpq' | 'portal' | 'installer' | 'architecture'>('dashboard');
   const [simSettings, setSimSettings] = useState<VehicleSettings | null>(null);
+
+  // Check for admin route (support /admin, /admin/, and subpaths)
+  const isAdmin = window.location.pathname.includes('/admin');
+
+  if (isAdmin) {
+    return <AdminPage />;
+  }
 
   const handleSimulate = (settings: VehicleSettings) => {
     setSimSettings(settings);
@@ -35,6 +44,8 @@ function App() {
           <CPQWizard />
         ) : view === 'portal' ? (
           <QuoteList />
+        ) : view === 'architecture' ? (
+          <DDDChallenge onComplete={() => {}} onBack={() => setView('dashboard')} />
         ) : (
           <InstallerApp />
         )}

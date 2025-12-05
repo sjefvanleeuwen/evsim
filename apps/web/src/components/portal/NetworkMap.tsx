@@ -207,8 +207,8 @@ export const NetworkMap: React.FC = () => {
   };
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex flex-col relative">
-      <div className="bg-gray-800 p-4 border-b border-gray-700 flex justify-between items-center z-10">
+    <div className="h-full flex flex-col relative overflow-hidden">
+      <div className="bg-gray-800 p-4 border-b border-gray-700 flex justify-between items-center z-10 shrink-0">
         <div>
             <h2 className="text-xl font-bold text-white">Network Operations Center</h2>
             <div className="text-sm text-gray-400 font-mono">
