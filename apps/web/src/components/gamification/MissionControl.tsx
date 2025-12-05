@@ -175,7 +175,7 @@ export const MissionControl: React.FC = () => {
                     setModal({
                         isOpen: true,
                         title: 'Success',
-                        message: 'All keys copied to clipboard!',
+                        message: 'All keys are copied! You can now paste them in an email and send them back to the Game Master.',
                         type: 'success'
                     });
                 } else {
